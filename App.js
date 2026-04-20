@@ -1,6 +1,6 @@
-// ==============================
+//////////////////////////////////////////////////
 // IMPORTS
-// ==============================
+//////////////////////////////////////////////////
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -12,45 +12,51 @@ import {
   TouchableOpacity
 } from 'react-native';
 
-// Safe area to avoid notch / camera overlap
-import { SafeAreaView } from 'react-native-safe-area-context';
+// Safe area (fix notch issue)
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-// Swipe gesture
+// Swipe gestures
 import {
   GestureHandlerRootView,
   Swipeable
 } from 'react-native-gesture-handler';
 
-// ==============================
-// MAIN APP
-// ==============================
+// Animation (Chapter 25)
+import Animated, { SlideInLeft, SlideOutRight } from 'react-native-reanimated';
+
+//////////////////////////////////////////////////
+// MAIN APP COMPONENT
+// Controls navigation between screens
+//////////////////////////////////////////////////
 export default function App() {
   const [screen, setScreen] = useState('planets');
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <View style={styles.container}>
-          {/* Navigation Buttons */}
-          <View style={styles.nav}>
-            <NavButton label="Planets" onPress={() => setScreen('planets')} />
-            <NavButton label="Films" onPress={() => setScreen('films')} />
-            <NavButton label="Ships" onPress={() => setScreen('ships')} />
-          </View>
+      <SafeAreaProvider>
+        <SafeAreaView style={{ flex: 1 }}>
+          <View style={styles.container}>
+            {/* Navigation buttons */}
+            <View style={styles.nav}>
+              <NavButton label="Planets" onPress={() => setScreen('planets')} />
+              <NavButton label="Films" onPress={() => setScreen('films')} />
+              <NavButton label="Ships" onPress={() => setScreen('ships')} />
+            </View>
 
-          {/* Render Screens */}
-          {screen === 'planets' && <Planets />}
-          {screen === 'films' && <Films />}
-          {screen === 'ships' && <Ships />}
-        </View>
-      </SafeAreaView>
+            {/* Render selected screen */}
+            {screen === 'planets' && <Planets />}
+            {screen === 'films' && <Films />}
+            {screen === 'ships' && <Ships />}
+          </View>
+        </SafeAreaView>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
 
-// ==============================
-// NAV BUTTON
-// ==============================
+//////////////////////////////////////////////////
+// NAVIGATION BUTTON COMPONENT
+//////////////////////////////////////////////////
 function NavButton({ label, onPress }) {
   return (
     <TouchableOpacity style={styles.button} onPress={onPress}>
@@ -59,9 +65,10 @@ function NavButton({ label, onPress }) {
   );
 }
 
-// ==============================
-// MODAL (Chapter 23)
-// ==============================
+//////////////////////////////////////////////////
+// MODAL COMPONENT (Chapter 23)
+// Displays item text after swipe
+//////////////////////////////////////////////////
 function ConfirmationModal({ visible, text, onClose }) {
   return (
     <Modal transparent visible={visible}>
@@ -77,15 +84,17 @@ function ConfirmationModal({ visible, text, onClose }) {
   );
 }
 
-// ==============================
-// PLANETS
-// ==============================
+//////////////////////////////////////////////////
+// PLANETS SCREEN
+// Fetches and displays planets
+//////////////////////////////////////////////////
 function Planets() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState('');
   const [visible, setVisible] = useState(false);
 
+  // Fetch planets
   useEffect(() => {
     fetch('https://www.swapi.tech/api/planets')
       .then(res => res.json())
@@ -105,11 +114,13 @@ function Planets() {
         onClose={() => setVisible(false)}
       />
 
+      {/* ScrollView (Chapter 24) */}
       <ScrollView>
         {data.map(item => (
           <Swipeable
             key={item.uid}
             onSwipeableOpen={() => {
+              // Show modal when swiped
               setSelected(item.name);
               setVisible(true);
             }}
@@ -122,9 +133,9 @@ function Planets() {
   );
 }
 
-// ==============================
-// FILMS
-// ==============================
+//////////////////////////////////////////////////
+// FILMS SCREEN
+//////////////////////////////////////////////////
 function Films() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -171,9 +182,9 @@ function Films() {
   );
 }
 
-// ==============================
-// SHIPS
-// ==============================
+//////////////////////////////////////////////////
+// SHIPS SCREEN
+//////////////////////////////////////////////////
 function Ships() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -216,9 +227,26 @@ function Ships() {
   );
 }
 
-// ==============================
-// REUSABLE COMPONENTS
-// ==============================
+//////////////////////////////////////////////////
+// ANIMATED ITEM (Chapter 25)
+// Items slide in from left
+//////////////////////////////////////////////////
+function Item({ text }) {
+  return (
+    <Animated.View
+      entering={SlideInLeft.duration(600)}
+      exiting={SlideOutRight.duration(600)}
+    >
+      <View style={styles.item}>
+        <Text style={styles.itemText}>{text}</Text>
+      </View>
+    </Animated.View>
+  );
+}
+
+//////////////////////////////////////////////////
+// LOADER COMPONENT
+//////////////////////////////////////////////////
 function Loader({ text }) {
   return (
     <View style={styles.center}>
@@ -228,27 +256,18 @@ function Loader({ text }) {
   );
 }
 
+//////////////////////////////////////////////////
+// TITLE COMPONENT
+//////////////////////////////////////////////////
 function Title({ text }) {
   return <Text style={styles.title}>{text}</Text>;
 }
 
-function Item({ text }) {
-  return (
-    <View style={styles.item}>
-      <Text style={styles.itemText}>{text}</Text>
-    </View>
-  );
-}
-
-// ==============================
+//////////////////////////////////////////////////
 // STYLES
-// ==============================
+//////////////////////////////////////////////////
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 15,
-    backgroundColor: 'ghostwhite'
-  },
+  container: { flex: 1, padding: 15, backgroundColor: 'ghostwhite' },
 
   nav: {
     flexDirection: 'row',
